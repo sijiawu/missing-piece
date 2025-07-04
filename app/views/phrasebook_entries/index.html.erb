@@ -1,0 +1,47 @@
+<div class="container mt-5">
+  <h2>Your Phrasebook</h2>
+  
+  <% if @phrasebook_entries.any? %>
+    <% @phrasebook_entries.group_by(&:language).each do |language, entries| %>
+      <div class="mb-5">
+        <h3><%= language %> Phrases</h3>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>English</th>
+              <th><%= language %></th>
+              <th>Usage</th>
+              <th>Example</th>
+              <th>Practice Links</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% entries.each do |entry| %>
+              <% phrase = entry.phrase %>
+              <% analyzer = PhraseAnalyzerService.new %>
+              <% core_word = phrase.translation.present? && phrase.translation != "[Translation unavailable]" ? analyzer.extract_core_word(phrase.translation) : analyzer.extract_core_word(phrase.text) %>
+              <tr>
+                <td><%= phrase.text %></td>
+                <td><%= phrase.translation %></td>
+                <td><%= phrase.explanation %></td>
+                <td><%= phrase.example %></td>
+                <td>
+                  <a href="<%= analyzer.youglish_url(phrase.text, language, phrase.translation) %>" target="_blank" rel="noopener" title="Listen to pronunciation of '<%= core_word %>' in <%= language %>">
+                    Youglish (<%= core_word %>)
+                  </a> |
+                  <a href="<%= analyzer.reverso_url(phrase.text, language) %>" target="_blank" rel="noopener">Reverso</a>
+                </td>
+                <td>
+                  <%= button_to 'Remove', phrasebook_entry_path(entry), method: :delete, data: { confirm: 'Remove this phrase?' }, class: 'btn btn-sm btn-outline-danger' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="alert alert-info">No phrases saved yet. Add some from your journal entries!</div>
+  <% end %>
+</div>

@@ -1,0 +1,19 @@
+<% # For demo: split by words. In a real app, use a JS highlighter or smarter phrase splitter. %>
+<% words = entry.content.split(/\s+/) %>
+<%= form_with url: phrases_path, method: :post, local: true do |form| %>
+  <div class="mb-3">
+    <label>Select words/phrases you want help with:</label>
+    <div class="row">
+      <% words.each_with_index do |word, i| %>
+        <div class="col-auto mb-2">
+          <div class="form-check">
+            <%= check_box_tag "phrases[]", word, false, id: "phrase_#{i}", class: "form-check-input" %>
+            <%= label_tag "phrase_#{i}", word, class: "form-check-label" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <%= hidden_field_tag :entry_id, entry.id %>
+  <%= form.submit "Get Suggestions", class: "btn btn-success" %>
+<% end %> 

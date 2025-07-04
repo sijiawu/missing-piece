@@ -1,0 +1,58 @@
+<div class="container mt-5">
+  <h2>Review <%= @target_language %> Translations</h2>
+  <p>Review the <%= @target_language.downcase %> translations below. Select the ones you want to save to your <%= @target_language.downcase %> phrasebook.</p>
+  
+  <% if @suggestions.any? { |s| s[:translation] == "[Translation unavailable]" } %>
+    <div class="alert alert-warning">
+      <strong>Note:</strong> Some translations could not be retrieved. This might be due to network issues or API rate limits. 
+      You can still save these phrases to your phrasebook and get translations later.
+    </div>
+  <% end %>
+  
+  <% analyzer = PhraseAnalyzerService.new %>
+  
+  <%= form_with url: phrasebook_entries_path, method: :post, local: true do |form| %>
+    <input type="hidden" name="entry_id" value="<%= @entry.id %>">
+    <input type="hidden" name="target_language" value="<%= @target_language %>">
+    <div class="row">
+      <% @suggestions.each_with_index do |s, i| %>
+        <div class="col-md-6 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><%= s[:text] %></h5>
+              <p>
+                <strong><%= @target_language %>:</strong> 
+                <% if s[:translation] == "[Translation unavailable]" %>
+                  <span class="text-muted">Translation unavailable</span>
+                <% else %>
+                  <%= s[:translation] %>
+                <% end %>
+              </p>
+              <p><strong>Usage:</strong> <%= s[:explanation] %></p>
+              <p><strong>Example:</strong> <%= s[:example] %></p>
+              <p class="text-muted small">
+                <strong>Youglish will use:</strong> 
+                <% if s[:translation] != "[Translation unavailable]" %>
+                  "<%= analyzer.extract_core_word(s[:translation]) %>" 
+                  (from <%= @target_language.downcase %> translation)
+                <% else %>
+                  "<%= analyzer.extract_core_word(s[:text]) %>" 
+                  (from English phrase)
+                <% end %>
+              </p>
+              <div class="form-check">
+                <%= check_box_tag "save_phrases[]", s[:text], true, id: "save_phrase_#{i}", class: "form-check-input" %>
+                <%= label_tag "save_phrase_#{i}", "Save to #{@target_language.downcase} phrasebook", class: "form-check-label" %>
+              </div>
+              <%# Hidden fields to pass suggestion data %>
+              <%= hidden_field_tag "translations[#{s[:text]}][translation]", s[:translation] %>
+              <%= hidden_field_tag "translations[#{s[:text]}][explanation]", s[:explanation] %>
+              <%= hidden_field_tag "translations[#{s[:text]}][example]", s[:example] %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <%= form.submit "Save Selected to #{@target_language} Phrasebook", class: "btn btn-primary" %>
+  <% end %>
+</div> 

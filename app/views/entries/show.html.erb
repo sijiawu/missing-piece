@@ -1,0 +1,17 @@
+<div class="container mt-5">
+  <div class="mb-3">
+    <%= link_to "← Back to All Entries", entries_path, class: "text-decoration-none" %>
+  </div>
+  
+  <h2>Your Journal Entry</h2>
+  <div class="card mb-3">
+    <div class="card-body">
+      <%= @entry.content %>
+    </div>
+  </div>
+  <div class="alert alert-secondary">
+    <strong>Next:</strong> Read through your text and highlight words or phrases you don't know how to say in French.<br>
+    <em>Tip: Try to select complete phrases when possible - your brain remembers chunks better than isolated words!</em>
+  </div>
+  <%= render partial: 'phrases/highlight', locals: { entry: @entry } %>
+</div>

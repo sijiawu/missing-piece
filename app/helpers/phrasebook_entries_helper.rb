@@ -1,0 +1,2 @@
+module PhrasebookEntriesHelper
+end

@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  entry: one
+  text: MyString
+  translation: MyString
+  explanation: MyText
+  example: MyText
+
+two:
+  entry: two
+  text: MyString
+  translation: MyString
+  explanation: MyText
+  example: MyText

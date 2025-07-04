@@ -1,0 +1,14 @@
+<div class="container mt-5">
+  <h2>New Journal Entry</h2>
+  <div class="alert alert-info d-flex justify-content-between align-items-center">
+    <span>Optional prompt: <%= @prompt %></span>
+    <%= link_to "🔄 Refresh Prompt", new_entry_path, class: "btn btn-sm btn-outline-info" %>
+  </div>
+  <%= form_with model: @entry, local: true do |form| %>
+    <div class="mb-3">
+      <%= form.label :content, "Your journal entry" %>
+      <%= form.text_area :content, class: "form-control", rows: 8 %>
+    </div>
+    <%= form.submit "Submit", class: "btn btn-primary" %>
+  <% end %>
+</div>

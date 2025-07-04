@@ -1,0 +1,259 @@
+<div class="mb-4">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Select Words to Build Phrases</h5>
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label for="targetLanguage" class="form-label">Target Language:</label>
+        <select id="targetLanguage" class="form-select" style="width: 200px;">
+          <option value="French">French</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Polish">Polish</option>
+          <option value="German">German</option>
+          <option value="Italian">Italian</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Russian">Russian</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Chinese">Chinese</option>
+          <option value="Korean">Korean</option>
+          <option value="English">English</option>
+        </select>
+      </div>
+      
+      <div class="mb-3">
+        <div id="clickableText" class="clickable-text" style="min-height: 200px; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; line-height: 1.8; background-color: #f8f9fa;">
+          <!-- Words will be inserted here by JavaScript -->
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <button id="addPhraseBtn" class="btn btn-primary" disabled>
+          Add Selected Words as Phrase
+        </button>
+        <button id="clearSelectionBtn" class="btn btn-outline-secondary ms-2" disabled>
+          Clear Selection
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="selectedPhrases" class="mt-3" style="display: none;">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">Selected Phrases:</h6>
+      </div>
+      <div class="card-body">
+        <div id="phrasesList" class="mb-3"></div>
+        <%= form_with url: phrases_path, method: :post, local: true, id: "phrasesForm" do |form| %>
+          <%= hidden_field_tag :entry_id, entry.id %>
+          <%= hidden_field_tag :selected_phrases, "", id: "selectedPhrasesInput" %>
+          <%= hidden_field_tag :target_language, "", id: "targetLanguageInput" %>
+          <%= form.submit "Get Translations", class: "btn btn-success" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.clickable-text {
+  user-select: none;
+  cursor: default;
+}
+
+.clickable-word {
+  display: inline-block;
+  padding: 2px 4px;
+  margin: 1px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.clickable-word:hover {
+  background-color: #e3f2fd;
+  transform: translateY(-1px);
+}
+
+.clickable-word.selected {
+  background-color: #2196f3;
+  color: white;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+.clickable-word.selected:hover {
+  background-color: #1976d2;
+}
+
+.phrase-tag {
+  display: inline-block;
+  background-color: #e9ecef;
+  border: 1px solid #dee2e6;
+  border-radius: 15px;
+  padding: 5px 10px;
+  margin: 2px;
+  font-size: 0.9em;
+}
+
+.phrase-tag .remove-phrase {
+  margin-left: 5px;
+  cursor: pointer;
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.punctuation {
+  display: inline-block;
+  margin: 0 1px;
+  color: #6c757d;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const textElement = document.getElementById('clickableText');
+  const addButton = document.getElementById('addPhraseBtn');
+  const clearButton = document.getElementById('clearSelectionBtn');
+  const selectedPhrasesDiv = document.getElementById('selectedPhrases');
+  const phrasesList = document.getElementById('phrasesList');
+  const selectedPhrasesInput = document.getElementById('selectedPhrasesInput');
+  const targetLanguageSelect = document.getElementById('targetLanguage');
+  const targetLanguageInput = document.getElementById('targetLanguageInput');
+  
+  let selectedPhrases = [];
+  let selectedWords = [];
+  
+  // Initialize target language input with the selected value
+  targetLanguageInput.value = targetLanguageSelect.value;
+  
+  // Update target language input when selection changes
+  targetLanguageSelect.addEventListener('change', function() {
+    targetLanguageInput.value = this.value;
+  });
+  
+  // Parse the text and create clickable words
+  function createClickableText(text) {
+    // Split text into words and punctuation
+    const words = text.split(/(\s+|[.,!?;:])/);
+    
+    words.forEach((word, index) => {
+      if (word.trim() === '') {
+        // Handle whitespace
+        textElement.appendChild(document.createTextNode(word));
+      } else if (/^[.,!?;:]$/.test(word)) {
+        // Handle punctuation
+        const punctuationSpan = document.createElement('span');
+        punctuationSpan.className = 'punctuation';
+        punctuationSpan.textContent = word;
+        textElement.appendChild(punctuationSpan);
+      } else {
+        // Handle words
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'clickable-word';
+        wordSpan.textContent = word;
+        wordSpan.dataset.index = index;
+        
+        wordSpan.addEventListener('click', function() {
+          toggleWordSelection(this);
+        });
+        
+        textElement.appendChild(wordSpan);
+      }
+    });
+  }
+  
+  // Toggle word selection
+  function toggleWordSelection(wordElement) {
+    const isSelected = wordElement.classList.contains('selected');
+    
+    if (isSelected) {
+      // Deselect the word
+      wordElement.classList.remove('selected');
+      const index = selectedWords.indexOf(wordElement);
+      if (index > -1) {
+        selectedWords.splice(index, 1);
+      }
+    } else {
+      // Select the word
+      wordElement.classList.add('selected');
+      selectedWords.push(wordElement);
+    }
+    
+    updateButtonStates();
+  }
+  
+  // Update button states based on selection
+  function updateButtonStates() {
+    if (selectedWords.length > 0) {
+      addButton.disabled = false;
+      clearButton.disabled = false;
+      addButton.textContent = `Add "${getSelectedText()}" as Phrase`;
+    } else {
+      addButton.disabled = true;
+      clearButton.disabled = true;
+      addButton.textContent = 'Add Selected Words as Phrase';
+    }
+  }
+  
+  // Get the text of selected words in order
+  function getSelectedText() {
+    return selectedWords.map(word => word.textContent).join(' ');
+  }
+  
+  // Add selected words as a phrase
+  addButton.addEventListener('click', function() {
+    const phraseText = getSelectedText();
+    
+    if (phraseText.length > 0 && !selectedPhrases.includes(phraseText)) {
+      selectedPhrases.push(phraseText);
+      updatePhrasesDisplay();
+      clearSelection();
+    }
+  });
+  
+  // Clear current selection
+  clearButton.addEventListener('click', function() {
+    clearSelection();
+  });
+  
+  function clearSelection() {
+    selectedWords.forEach(word => {
+      word.classList.remove('selected');
+    });
+    selectedWords = [];
+    updateButtonStates();
+  }
+  
+  function updatePhrasesDisplay() {
+    if (selectedPhrases.length > 0) {
+      selectedPhrasesDiv.style.display = 'block';
+      phrasesList.innerHTML = '';
+      
+      selectedPhrases.forEach((phrase, index) => {
+        const phraseTag = document.createElement('span');
+        phraseTag.className = 'phrase-tag';
+        phraseTag.innerHTML = `
+          ${phrase}
+          <span class="remove-phrase" onclick="removePhrase(${index})">&times;</span>
+        `;
+        phrasesList.appendChild(phraseTag);
+      });
+      
+      selectedPhrasesInput.value = JSON.stringify(selectedPhrases);
+      targetLanguageInput.value = targetLanguageSelect.value;
+    } else {
+      selectedPhrasesDiv.style.display = 'none';
+    }
+  }
+  
+  window.removePhrase = function(index) {
+    selectedPhrases.splice(index, 1);
+    updatePhrasesDisplay();
+  };
+  
+  // Initialize the clickable text
+  createClickableText(<%= raw entry.content.to_json %>);
+});
+</script> 
