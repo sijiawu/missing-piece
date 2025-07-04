@@ -23,22 +23,6 @@ For language learners who don't need more random things to memorize — just the
 - Practice with real examples from your own writing!
 <img width="1088" alt="Screenshot 2025-07-03 at 10 23 25 PM" src="https://github.com/user-attachments/assets/e7ae4d92-2f0e-42e2-94fa-1b73dd8577fe" />
 
-## Getting Started
-
-### Prerequisites
-
-* Ruby 3.1.2 or higher
-* PostgreSQL
-* DeepL API key (for translations)
-
-### Installation
-
-1. Clone the repository
-2. Run `bundle install`
-3. Set up your database: `rails db:create db:migrate`
-4. Add your DeepL API key to Rails credentials
-5. Start the server: `rails server`
-
 ## Usage
 
 1. Sign up or log in
@@ -47,6 +31,3 @@ For language learners who don't need more random things to memorize — just the
 4. Get translations and save to your phrasebook
 5. Review and practice with your saved phrases
 
-## Contributing
-
-This is a personal project for language learning. Feel free to fork and adapt for your own needs.
